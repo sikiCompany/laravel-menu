@@ -102,6 +102,37 @@ class Builder
     }
 
     /**
+     * Add a URL item.
+     *
+     * @param string $url
+     * @param string $title
+     * @param array  $options
+     *
+     * @return Item
+     */
+    public function url($url, $title, array $options = [])
+    {
+        $options['url'] = $url;
+        return $this->add($title, $options);
+    }
+
+    /**
+     * Add a dropdown item.
+     *
+     * @param string $title
+     * @param \Closure $callback
+     * @param array  $options
+     *
+     * @return Item
+     */
+    public function dropdown($title, \Closure $callback, array $options = [])
+    {
+        $item = $this->add($title, $options);
+        $callback(new DropdownProxy($this, $item->id));
+        return $item;
+    }
+
+    /**
      * Returns menu item by name.
      *
      * @return Item|null
@@ -864,6 +895,18 @@ class Builder
         }
 
         $value = $args ? $args[0] : null;
+
+        if (isset($args[1]) && $args[1] instanceof \Closure) {
+            $item = $this->items->first(function ($item) use ($attribute, $value) {
+                return $item->hasProperty($attribute) && $item->$attribute == $value;
+            });
+            if ($item) {
+                $args[1](new DropdownProxy($this, $item->id));
+            }
+
+            return $this;
+        }
+
         $recursive = isset($args[1]) ? $args[1] : false;
 
         if ($recursive) {

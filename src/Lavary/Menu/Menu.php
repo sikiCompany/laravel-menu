@@ -132,6 +132,79 @@ class Menu
     }
 
     /**
+     * Run a callback against an existing menu builder.
+     *
+     * @param string   $name
+     * @param callable $callback
+     *
+     * @return Builder|null
+     */
+    public function modify($name, callable $callback)
+    {
+        if (!is_callable($callback) || !$this->exists($name)) {
+            return null;
+        }
+
+        call_user_func($callback, $this->menu[$name]);
+
+        return $this->menu[$name];
+    }
+
+    /**
+     * Create or replace a menu builder and register items.
+     *
+     * @param string   $name
+     * @param callable $callback
+     * @param array    $options
+     *
+     * @return Builder|null
+     */
+    public function create($name, callable $callback, array $options = [])
+    {
+        if (!is_callable($callback)) {
+            return null;
+        }
+
+        $this->menu[$name] = new Builder($name, array_merge($this->loadConf($name), $options));
+
+        call_user_func($callback, $this->menu[$name]);
+
+        $this->collection->put($name, $this->menu[$name]);
+
+        View::share($name, $this->menu[$name]);
+
+        return $this->menu[$name];
+    }
+
+    /**
+     * Render a registered menu as HTML (default list) or via a Blade view.
+     *
+     * @param string      $name
+     * @param string|null $style View name or key from laravel-menu.views
+     *
+     * @return string
+     */
+    public function render($name, $style = null)
+    {
+        $menu = $this->get($name);
+
+        if (!$menu) {
+            return '';
+        }
+
+        if ($style === null) {
+            return $menu->asUl();
+        }
+
+        $views = config('laravel-menu.views', []);
+        if (isset($views[$style])) {
+            $style = $views[$style];
+        }
+
+        return View::make($style, ['items' => $menu->roots()])->render();
+    }
+
+    /**
      * Alias for getCollection.
      *
      * @return \Illuminate\Support\Collection

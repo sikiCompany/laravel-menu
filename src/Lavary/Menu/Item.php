@@ -199,6 +199,12 @@ class Item
         return $this;
     }
 
+    public function order($order)
+    {
+        $this->data('order', $order);
+        return $this;
+    }
+
     /**
      * Group children of the item.
      *
@@ -491,7 +497,7 @@ class Item
             $this->data = array_merge($this->data, array_change_key_case($args[0]));
 
             // Cascade data to item's children if cascade_data option is enabled
-            if ($this->builder->conf['cascade_data']) {
+            if (!empty($this->builder->conf['cascade_data'])) {
                 $this->cascade_data($args);
             }
 
@@ -500,7 +506,7 @@ class Item
             $this->data[strtolower($args[0])] = $args[1];
 
             // Cascade data to item's children if cascade_data option is enabled
-            if ($this->builder->conf['cascade_data']) {
+            if (!empty($this->builder->conf['cascade_data'])) {
                 $this->cascade_data($args);
             }
 
